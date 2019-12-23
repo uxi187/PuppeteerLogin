@@ -10,10 +10,17 @@
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
-
-const {PuppeteerLogin} = require('../integration/login.plugin')
+const webpack = require('@cypress/webpack-preprocessor')
+const { PuppeteerLogin } = require('../integration/login.plugin')
 
 module.exports = (on, config) => {
+  const options = {
+    // send in the options from your webpack.config.js, so it works the same
+    // as your app's code
+    webpackOptions: require('../../webpack.config'),
+    watchOptions: {}
+  }
+  on('file:preprocessor', webpack(options))
   on('task', {
     'Login': PuppeteerLogin
   })

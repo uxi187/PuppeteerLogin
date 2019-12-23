@@ -1,3 +1,7 @@
+import { AnyKindOfDictionary } from "cypress/types/lodash"
+import { any } from "cypress/types/bluebird"
+
+let ss: string = 'Milan'
 
 context('Login with puppeteer and return cookies to Cypress', () => {
     const username = 'john@sharklasers.com'
@@ -12,12 +16,23 @@ context('Login with puppeteer and return cookies to Cypress', () => {
         postLoginSelector: 'a[data-test-id="WishlistIconHeader"]',
         getAllBrowserCookies: true
     }
+    interface Cookie {
+        name: string,
+        value: string,
+        domain: string,
+        expires: number,
+        httpOnly: boolean,
+        path: string,
+        secure: false,
+        session: true,
+        size: number
+    }
 
     beforeEach(() => {
         cy.visit('https://www.aboutyou.de/dein-shop')
-        cy.task('Login', loginOptions).then(({ cookies }) => {
+        cy.task('Login', loginOptions).then(({cookies}:any) => {
             cy.clearCookies()
-            cookies.forEach(c => cy.setCookie(c.name, c.value))
+             cookies.forEach(c => cy.setCookie(c.name, c.value))
         })
     })
 
