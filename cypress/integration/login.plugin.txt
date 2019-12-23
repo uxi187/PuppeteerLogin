@@ -1,0 +1,62 @@
+import puppeteer from 'puppeteer'
+import { any } from 'cypress/types/bluebird'
+
+export const PuppeteerLogin = async function PuppeteerLogin(options: any = {}) {
+  validateOptions(options)
+
+  const browser = await puppeteer.launch({ headless: !!options.headless })
+  const page = await browser.newPage()
+  await page.setViewport({ width: 1280, height: 800 })
+
+  await page.goto(options.loginUrl)
+
+  await typeUsername({ page: any, options: any })
+  await typePassword({ page, options })
+  await submit({ page })
+
+  const cookies = await getCookies({ page, options })
+
+  await finalizeSession({ browser  })
+
+  return {
+    cookies 
+  }
+}
+
+function validateOptions(options) {
+  if (!options.username || !options.password) {
+    throw new Error('Username or Password missing for social login')
+  }
+}
+
+const typeUsername = async({ page, options }): Promise<void> => {
+  await page.waitForSelector('input[name="email"]', { visible: true });
+  await page.type('input[name="email"]', options.username, { delay: 100 })
+}
+
+const typePassword = async({ page, options }): Promise<void> => {
+  await page.waitForSelector('input[name="password"]');
+  await page.type('input[name="password"]', options.password, { delay: 100 });
+}
+
+const submit = async({ page }): Promise<void>  => {
+  await page.waitForSelector('button[type="submit"]', { visible: true })
+  await page.click('button[type="submit"]')
+}
+const getCookies = async({ page, options }): Promise<any>  => {
+  await page.waitForSelector(options.postLoginSelector, { visible: true })
+  const cookies = options.getAllBrowserCookies
+    ? await getCookiesForAllDomains(page)
+    : await page.cookies(options.loginUrl)
+  if (options.logs) {
+    console.log(cookies)
+  }
+  return cookies
+}
+const getCookiesForAllDomains = async({ page }): Promise<any>  => {
+  const cookies = await page._client.send('Network.getAllCookies', {})
+  return cookies.cookies
+}
+const finalizeSession = async({ browser }): Promise<void>  => {
+  await browser.close()
+}
